@@ -1,0 +1,137 @@
+guid: d2cec26e-47f2-462b-80ef-5faa3285f805
+model:
+  name: Honey Production Model Model
+  model_tables:
+  - name: BEEHIVE_DIM_REGION
+    joins:
+    - with: BEEHIVE_DIM_ENVIRONMENT
+      'on': '[BEEHIVE_DIM_REGION::REGION_ID] = [BEEHIVE_DIM_ENVIRONMENT::REGION_ID]'
+      type: INNER
+      cardinality: ONE_TO_MANY
+    - with: BEEHIVE_FACT_HONEY_PRODUCTION
+      'on': '[BEEHIVE_DIM_REGION::REGION_ID] = [BEEHIVE_FACT_HONEY_PRODUCTION::REGION_ID]'
+      type: INNER
+      cardinality: ONE_TO_MANY
+  - name: BEEHIVE_DIM_DATE
+  - name: BEEHIVE_DIM_ENVIRONMENT
+  - name: BEEHIVE_FACT_HONEY_PRODUCTION
+  columns:
+  - name: Region Id
+    column_id: BEEHIVE_DIM_REGION::REGION_ID
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Regionname
+    column_id: BEEHIVE_DIM_REGION::REGIONNAME
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DONT_INDEX
+  - name: Country
+    column_id: BEEHIVE_DIM_REGION::COUNTRY
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DONT_INDEX
+  - name: Climatezone
+    column_id: BEEHIVE_DIM_REGION::CLIMATEZONE
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DONT_INDEX
+  - name: Date
+    column_id: BEEHIVE_DIM_DATE::DATE
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DONT_INDEX
+  - name: Day
+    column_id: BEEHIVE_DIM_DATE::DAY
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Month
+    column_id: BEEHIVE_DIM_DATE::MONTH
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Quarter
+    column_id: BEEHIVE_DIM_DATE::QUARTER
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Year
+    column_id: BEEHIVE_DIM_DATE::YEAR
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Environment Id
+    column_id: BEEHIVE_DIM_ENVIRONMENT::ENVIRONMENT_ID
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: BEEHIVE DIM ENVIRONMENT Region Id
+    column_id: BEEHIVE_DIM_ENVIRONMENT::REGION_ID
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Pesticideuse
+    column_id: BEEHIVE_DIM_ENVIRONMENT::PESTICIDEUSE
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Flowerdiversityindex
+    column_id: BEEHIVE_DIM_ENVIRONMENT::FLOWERDIVERSITYINDEX
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Honeyproduction Id
+    column_id: BEEHIVE_FACT_HONEY_PRODUCTION::HONEYPRODUCTION_ID
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DONT_INDEX
+  - name: BEEHIVE FACT HONEY PRODUCTION Date
+    column_id: BEEHIVE_FACT_HONEY_PRODUCTION::DATE
+    properties:
+      column_type: ATTRIBUTE
+      index_type: DONT_INDEX
+  - name: BEEHIVE FACT HONEY PRODUCTION Region Id
+    column_id: BEEHIVE_FACT_HONEY_PRODUCTION::REGION_ID
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Beepopulation
+    column_id: BEEHIVE_FACT_HONEY_PRODUCTION::BEEPOPULATION
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Honeyyield
+    column_id: BEEHIVE_FACT_HONEY_PRODUCTION::HONEYYIELD
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Temperature
+    column_id: BEEHIVE_FACT_HONEY_PRODUCTION::TEMPERATURE
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  - name: Rainfall
+    column_id: BEEHIVE_FACT_HONEY_PRODUCTION::RAINFALL
+    properties:
+      column_type: MEASURE
+      index_type: DONT_INDEX
+      aggregation: SUM
+  properties:
+    is_bypass_rls: false
+    join_progressive: true
+    sage_config:
+      is_sage_enabled: true

@@ -1,0 +1,234 @@
+{
+  "info": {
+    "title": "Synthetic Data API",
+    "version": "1.0.0",
+    "description": "Executes the provided code and returns a set of dataframe"
+  },
+  "paths": {
+    "/generate-data": {
+      "post": {
+        "tags": [
+          "Data Generation"
+        ],
+        "summary": "Generates a set of dataframes from provided Python code",
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dataframes": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "array",
+                        "items": {
+                          "type": "object"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Successfully generated dataframes"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Bad request (e.g., missing code or execution error)"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Unauthorized (missing or invalid API key)"
+          }
+        },
+        "description": "Executes a block of Python code to generate one or more pandas DataFrames. Returns a preview of each dataframe.",
+        "operationId": "generateData",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "code"
+                ],
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "description": "Python code string that generates pandas DataFrames. DataFrame variables should end in '_df'."
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+"/insert-data": {
+  "post": {
+    "tags": ["Data Insertion"],
+    "summary": "Inserts generated data into Snowflake and builds ThoughtSpot model",
+    "security": [
+      { "ApiKeyAuth": [] }
+    ],
+    "responses": {
+      "200": {
+        "description": "Data successfully inserted and model created",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": { "type": "string" },
+                "tables": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "model_id": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad request (e.g., missing fields or code error)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized (missing or invalid API key)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal server error during data insertion or TML generation",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "description": "Executes a code block to generate DataFrames, inserts them into Snowflake, and optionally accepts custom join definitions to override default ThoughtSpot model generation.",
+    "operationId": "insertData",
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "required": ["code", "demo_unique_prefix", "demo_name"],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Python code that generates pandas DataFrames. DataFrame variables must end in '_df'."
+              },
+              "demo_unique_prefix": {
+                "type": "string",
+                "description": "Prefix used to name Snowflake and ThoughtSpot artifacts"
+              },
+              "demo_name": {
+                "type": "string",
+                "description": "Display name for the generated ThoughtSpot model"
+              },
+              "joins": {
+                "type": "array",
+                "description": "Optional explicit join definitions to override inferred joins",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "joins"],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Owning table of the join (typically a dimension table)"
+                    },
+                    "joins": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["with", "on", "type", "cardinality"],
+                        "properties": {
+                          "with": { "type": "string", "description": "Table being joined to" },
+                          "on": { "type": "string", "description": "Join condition (TML format)" },
+                          "type": { "type": "string", "enum": ["INNER", "LEFT", "RIGHT", "OUTER"] },
+                          "cardinality": { "type": "string", "enum": ["ONE_TO_ONE", "ONE_TO_MANY", "MANY_TO_ONE", "MANY_TO_MANY"] }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+  },
+  "openapi": "3.0.0",
+  "servers": [
+    {
+      "url": "https://data-gen-tool-31nx.onrender.com"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "in": "header",
+        "name": "X-API-Key",
+        "type": "apiKey"
+      }
+    }
+  }
+}

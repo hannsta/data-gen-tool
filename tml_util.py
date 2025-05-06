@@ -64,7 +64,7 @@ def normalize_column_name(name):
 def clean_table_name(table_name: str, db_name: str):
     return f"{db_name}_{table_name.replace('_df', '').upper()}"
 
-def generate_model_tml(dataframes, db_name, demo_name):
+def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
     model_tables = []
     column_definitions = []
     joins = []
@@ -116,6 +116,7 @@ def generate_model_tml(dataframes, db_name, demo_name):
     column_name_map = {}
 
     for table_name, df in dataframes.items():
+        df.columns = df.columns.str.upper()
         clean_name = clean_table_name(table_name, db_name).upper()
         model_tables.append({"name": clean_name})
 
@@ -148,7 +149,8 @@ def generate_model_tml(dataframes, db_name, demo_name):
 
     # Attach joins to owning tables
     join_map = collections.defaultdict(list)
-    for join in joins:
+    effective_joins = joins_override if joins_override else joins
+    for join in effective_joins:
         join_map[join["name"]].extend(join["joins"])
     for table in model_tables:
         if table["name"] in join_map:

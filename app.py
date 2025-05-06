@@ -57,14 +57,15 @@ def generate_data():
     }
     return jsonify({"dataframes": preview}), 200
 
+
 @app.route('/insert-data', methods=['POST'])
 @require_api_key
 def insert_data():
     code = request.json.get("code")
-    db_name = request.json.get("db_name")
-    model_name = request.json.get("model_name")
+    demo_unique_prefix = request.json.get("demo_unique_prefix")
+    demo_name = request.json.get("demo_name")
 
-    if not code or not db_name or not model_name:
+    if not code or not demo_unique_prefix or not demo_name:
         return jsonify({"error": "Missing code, db_name, or model_name"}), 400
 
     dataframes, error = run_code(code)
@@ -74,15 +75,17 @@ def insert_data():
     try:
         # Insert into Snowflake
         for name, df in dataframes.items():
-            table_name = f"{db_name}_{name.replace('_df', '')}".upper()
+            table_name = f"{demo_unique_prefix}_{name.replace('_df', '')}".upper()
             insert_dataframe_to_snowflake(df, table_name)
 
         # Generate and insert TML
-        table_tmls = [generate_table_tml(f"{db_name}_{name.replace('_df', '')}".upper(), df) for name, df in dataframes.items()]
+        table_tmls = [generate_table_tml(f"{demo_unique_prefix}_{name.replace('_df', '')}".upper(), df) for name, df in dataframes.items()]
         for tml in table_tmls:
             import_tmls_to_thoughtspot([tml])
 
-        model_tml = generate_model_tml(dataframes, db_name, model_name)
+        model_tml = generate_model_tml(dataframes, demo_unique_prefix, demo_name)
+        with open("output.txt", "w") as f:
+            f.write(model_tml)
         resp = import_tmls_to_thoughtspot([model_tml])
         model_id = resp[0]['response']['header']['id_guid']
 
@@ -94,5 +97,8 @@ def insert_data():
     except Exception as e:
         return jsonify({"error": traceback.format_exc()}), 500
 
+
+
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0',port=80 )
+    app.run(debug=True, host='0.0.0.0',port=3030 )

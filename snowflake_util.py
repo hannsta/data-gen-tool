@@ -1,5 +1,4 @@
 from sqlalchemy import text, create_engine
-import snowflake.connector
 import pandas as pd
 import numpy as np
 from dotenv import load_dotenv
@@ -41,6 +40,7 @@ def insert_dataframe_to_snowflake(df: pd.DataFrame, table_name: str, if_exists: 
     
     df = sanitize_dataframe_for_sql(df)
     print(df.dtypes)
+    df.columns = df.columns.str.upper()
 
     engine = get_engine()
 
