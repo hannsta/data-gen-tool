@@ -199,7 +199,6 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
                     }
                 ],
                 "search_query": answer_token,
-                "chart": chart_type
             },
             "viz_guid": viz_guid
         })
