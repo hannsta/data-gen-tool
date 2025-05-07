@@ -187,6 +187,7 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
 
         viz_guid = str(uuid.uuid4())
         answer_token = answer_question(question, model_id)
+        print("answer!!")
         print(answer_token)
         visualizations.append({
             "id": f"Viz_{idx}",
