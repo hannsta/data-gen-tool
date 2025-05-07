@@ -50,10 +50,11 @@ def answer_question(question: str, model_id: str):
     session = requests.Session()
     session.verify = False
     get_auth_token(session)
-
+    print("making call")
     url = THOUGHTSPOT_SERVER + "ai/answer/create"
     response = session.post(url=url, data=json.dumps({"query":  question, "metadata_identifier": model_id}))
-    
+    print(response)
+    print("Response")
     response.raise_for_status()
 
     return response.json()['tokens']
