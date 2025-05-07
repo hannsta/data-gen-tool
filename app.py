@@ -85,6 +85,7 @@ def insert_data():
             import_tmls_to_thoughtspot([tml])
 
         model_tml = generate_model_tml(dataframes, demo_unique_prefix, demo_name, joins_override=joins)
+        print(model_tml)
         with open("output.txt", "w") as f:
             f.write(model_tml)
         resp = import_tmls_to_thoughtspot([model_tml])
