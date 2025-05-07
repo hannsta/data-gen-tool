@@ -24,8 +24,6 @@ def get_auth_token(session):
     response = session.post(url=url, data=post_data)
     response.raise_for_status()
     token = response.json()['token']
-    print("token ============")
-    print(token)
     session.headers.update({
         'Authorization': f"Bearer {token}",
         'Accept-Language': 'application/json',
@@ -54,7 +52,6 @@ def answer_question(question: str, model_id: str):
     get_auth_token(session)
 
     url = THOUGHTSPOT_SERVER + "ai/answer/create"
-    print({"query":  question, "metadata_identifier": model_id})
     response = session.post(url=url, data=json.dumps({"query":  question, "metadata_identifier": model_id}))
     
     response.raise_for_status()
