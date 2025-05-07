@@ -175,25 +175,31 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
     return dump(model_tml, sort_keys=False)
 
 
+import uuid
+
 def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Generated Dashboard"):
     dashboard_guid = str(uuid.uuid4())
     visualizations = []
 
-    for idx, question in enumerate(questions, start=1):
+    for idx, spec in enumerate(questions):
+        question = spec["question"]
+        chart_type = spec.get("chart_type", "COLUMN")  # Default to COLUMN if not provided
+
         viz_guid = str(uuid.uuid4())
-        answer_token = answer_question(question, model_id)  # Assume this returns the token string
+        answer_token = answer_question(question, model_id)
 
         visualizations.append({
-            "id": f"Viz_{idx}",
+            "id": f"Viz_{idx+1}",
             "answer": {
                 "name": question.strip().capitalize(),
                 "tables": [
                     {
-                        "id":  f"{demo_name} Model",
-                        "name":  f"{demo_name} Model" # Assuming name and id are the same; adjust if not
+                        "id": f"{demo_name} Model",
+                        "name": f"{demo_name} Model"
                     }
                 ],
-                "search_query": answer_token
+                "search_query": answer_token,
+                "chart": chart_type
             },
             "viz_guid": viz_guid
         })
