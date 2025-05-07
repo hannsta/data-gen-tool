@@ -113,6 +113,7 @@ def create_dashboard():
 
     try:
         dashboard_tml = generate_dashboard_tml(questions, model_id, demo_name, dashboard_name)
+        print(dashboard_tml)
         response = import_tmls_to_thoughtspot([dashboard_tml])
         dashboard_id = response[0]['response']['header']['id_guid']
 

@@ -214,5 +214,4 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
             "visualizations": visualizations
         }
     }
-    print(dashboard_tml)
     return dump(dashboard_tml, sort_keys=False)
