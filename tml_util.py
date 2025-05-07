@@ -181,7 +181,7 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
     dashboard_guid = str(uuid.uuid4())
     visualizations = []
 
-    for idx, spec in enumerate(questions):
+    for idx, spec in enumerate(questions, start=1):
         question = spec["question"]
         chart_type = spec.get("chart_type", "COLUMN")  # Default to COLUMN if not provided
 
@@ -189,7 +189,7 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
         answer_token = answer_question(question, model_id)
 
         visualizations.append({
-            "id": f"Viz_{idx+1}",
+            "id": f"Viz_{idx}",
             "answer": {
                 "name": question.strip().capitalize(),
                 "tables": [
@@ -199,6 +199,7 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
                     }
                 ],
                 "search_query": answer_token,
+                "chart": chart_type
             },
             "viz_guid": viz_guid
         })
