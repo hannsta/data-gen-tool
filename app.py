@@ -4,7 +4,7 @@ import numpy as np
 from faker import Faker
 import traceback
 from functools import wraps
-from tml_util import generate_table_tml, generate_model_tml
+from tml_util import generate_table_tml, generate_model_tml, generate_dashboard_tml
 from snowflake_util import insert_dataframe_to_snowflake
 from ts_api import import_tmls_to_thoughtspot
 
@@ -58,13 +58,14 @@ def generate_data():
     return jsonify({"dataframes": preview}), 200
 
 
+
 @app.route('/insert-data', methods=['POST'])
 @require_api_key
 def insert_data():
     code = request.json.get("code")
     demo_unique_prefix = request.json.get("demo_unique_prefix")
     demo_name = request.json.get("demo_name")
-
+    joins = request.json.get("joins")
     if not code or not demo_unique_prefix or not demo_name:
         return jsonify({"error": "Missing code, db_name, or model_name"}), 400
 
@@ -83,7 +84,7 @@ def insert_data():
         for tml in table_tmls:
             import_tmls_to_thoughtspot([tml])
 
-        model_tml = generate_model_tml(dataframes, demo_unique_prefix, demo_name)
+        model_tml = generate_model_tml(dataframes, demo_unique_prefix, demo_name, joins_override=joins)
         with open("output.txt", "w") as f:
             f.write(model_tml)
         resp = import_tmls_to_thoughtspot([model_tml])
@@ -97,6 +98,30 @@ def insert_data():
     except Exception as e:
         return jsonify({"error": traceback.format_exc()}), 500
 
+@app.route('/create-dashboard', methods=['POST'])
+@require_api_key
+def create_dashboard():
+    payload = request.json
+    questions = payload.get("questions")
+    model_id = payload.get("model_id")
+    demo_name = payload.get("demo_name")
+    dashboard_name = payload.get("dashboard_name", "Generated Dashboard")
+
+    if not questions or not model_id or not demo_name:
+        return jsonify({"error": "Missing questions, model_id, or demo_name"}), 400
+
+    try:
+        dashboard_tml = generate_dashboard_tml(questions, model_id, demo_name, dashboard_name)
+        response = import_tmls_to_thoughtspot([dashboard_tml])
+        dashboard_id = response[0]['response']['header']['id_guid']
+
+        return jsonify({
+            "status": "success",
+            "dashboard_id": dashboard_id,
+            "dashboard_name": dashboard_name,
+        }), 200
+    except Exception as e:
+        return jsonify({"error": traceback.format_exc()}), 500
 
 
 
