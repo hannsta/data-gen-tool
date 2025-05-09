@@ -3,7 +3,7 @@ from yaml import dump
 import pandas as pd
 import collections
 
-from ts_api import answer_question
+from ts_api import answer_question, export_unsaved_answer_tml
 
 # ------------------------------------------------------------------------
 # Column Type Mapping
@@ -186,23 +186,23 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
         chart_type = spec.get("chart_type", "COLUMN")  # Default to COLUMN if not provided
 
         viz_guid = str(uuid.uuid4())
-        answer_token = answer_question(question, model_id)
-        print("answer!!")
-        print(answer_token)
-        visualizations.append({
-            "id": f"Viz_{idx}",
-            "answer": {
-                "name": question.strip().capitalize(),
-                "tables": [
-                    {
-                        "id": f"{demo_name} Model",
-                        "name": f"{demo_name} Model"
-                    }
-                ],
-                "search_query": answer_token,
-            },
-            "viz_guid": viz_guid
-        })
+        answer_token, session_id, gen_no, session = answer_question(question, model_id)
+        answer_tml = export_unsaved_answer_tml(session, session_id, gen_no)
+        visualizations.append(answer_tml)
+        # visualizations.append({
+        #     "id": f"Viz_{idx}",
+        #     "answer": {
+        #         "name": question.strip().capitalize(),
+        #         "tables": [
+        #             {
+        #                 "id": f"{demo_name} Model",
+        #                 "name": f"{demo_name} Model"
+        #             }
+        #         ],
+        #         "search_query": answer_token,
+        #     },
+        #     "viz_guid": viz_guid
+        # })
 
     dashboard_tml = {
         "guid": dashboard_guid,

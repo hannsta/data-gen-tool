@@ -2,7 +2,7 @@ import json
 import requests
 from dotenv import load_dotenv
 import os
-
+import yaml
 load_dotenv() 
 
 THOUGHTSPOT_URL = os.getenv("THOUGHTSPOT_URL") 
@@ -57,4 +57,44 @@ def answer_question(question: str, model_id: str):
     print("Response")
     response.raise_for_status()
 
-    return response.json()['tokens']
+    return response.json()['tokens'],response.json()['session_identifier'], response.json()['generation_number'], session
+
+def export_unsaved_answer_tml(session, session_id: str, gen_no: int):
+    graphql_query = """
+    mutation GetUnsavedAnswerTML($session: BachSessionIdInput!, $exportDependencies: Boolean, $formatType:  EDocFormatType, $exportPermissions: Boolean, $exportFqn: Boolean) {
+      UnsavedAnswer_getTML(
+        session: $session
+        exportDependencies: $exportDependencies
+        formatType: $formatType
+        exportPermissions: $exportPermissions
+        exportFqn: $exportFqn
+      ) {
+        zipFile
+        object {
+          edoc
+          name
+          type
+        }
+      }
+    }
+    """
+    prism_url = f"{THOUGHTSPOT_URL}/prism/?op=GetUnsavedAnswerTML"
+    payload = {
+        "operationName": "GetUnsavedAnswerTML",
+        "query": graphql_query,
+        "variables": {
+            "session": {
+                "sessionId": session_id,
+                "genNo": gen_no
+            },
+            "exportDependencies": False,
+            "formatType": "YAML",
+            "exportPermissions": False,
+            "exportFqn": False
+        }
+    }
+    response = session.post(prism_url, data=json.dumps(payload))
+    response.raise_for_status()
+    data = response.json()
+    edoc = data["data"]["UnsavedAnswer_getTML"]["object"][0]["edoc"]
+    return yaml.safe_load(edoc)
