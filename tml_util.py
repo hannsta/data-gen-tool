@@ -116,8 +116,13 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
             })
             defined_joins.add(join_key)
         for table_name, df in dataframes.items():
-            if "TODAY_OFFSET_KEY" in df.columns.str.upper():
+            columns_upper = df.columns.str.upper()
+            if "TODAY_OFFSET_KEY" in columns_upper:
                 clean_name = clean_table_name(table_name, db_name).upper()
+                join_key = (clean_name, "AUTO_CREATE_DATE_DIM", "TODAY_OFFSET_KEY")
+                if join_key in defined_joins:
+                    continue
+
                 joins.append({
                     "name": clean_name,
                     "joins": [{
@@ -127,6 +132,8 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
                         "cardinality": "MANY_TO_ONE"
                     }]
                 })
+                defined_joins.add(join_key)
+
     # Map column names to avoid collisions in display names
     column_name_map = {}
     model_tables.append({"name": "AUTO_CREATE_DATE_DIM"})
