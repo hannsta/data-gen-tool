@@ -95,6 +95,10 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
         sorted_tables = sorted(id_counts.items(), key=lambda x: x[1])
         dim_table = sorted_tables[0][0]
         dim_clean = clean_table_name(dim_table, db_name).upper()
+
+
+
+
         for fact_table, _ in sorted_tables[1:]:
             fact_clean = clean_table_name(fact_table, db_name).upper()
             join_key = (dim_clean, fact_clean, id_col)
@@ -111,9 +115,21 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
                 }]
             })
             defined_joins.add(join_key)
-
+        for table_name, df in dataframes.items():
+            if "TODAY_OFFSET_KEY" in df.columns.str.upper():
+                clean_name = clean_table_name(table_name, db_name).upper()
+                joins.append({
+                    "name": clean_name,
+                    "joins": [{
+                        "with": "DATE_DIM",
+                        "on": f"[{clean_name}::TODAY_OFFSET_KEY] = [DATE_DIM::TODAY_OFFSET_KEY]",
+                        "type": "INNER",
+                        "cardinality": "MANY_TO_ONE"
+                    }]
+                })
     # Map column names to avoid collisions in display names
     column_name_map = {}
+    model_tables.append({"name": "DATE_DIM"})
 
     for table_name, df in dataframes.items():
         df.columns = df.columns.str.upper()
@@ -187,7 +203,7 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
 
         viz_guid = str(uuid.uuid4())
         answer_token, session_id, gen_no, session = answer_question(question, model_id)
-        answer_tml = export_unsaved_answer_tml(session, session_id, gen_no)
+        answer_tml = export_unsaved_answer_tml(session,session_id, gen_no)
         visualizations.append(answer_tml)
         # visualizations.append({
         #     "id": f"Viz_{idx}",
