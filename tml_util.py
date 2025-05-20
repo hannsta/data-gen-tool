@@ -137,7 +137,7 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
     # Map column names to avoid collisions in display names
     column_name_map = {}
     model_tables.append({"name": "AUTO_CREATE_DATE_DIM"})
-
+    model_tables.append()
     for table_name, df in dataframes.items():
         df.columns = df.columns.str.upper()
         clean_name = clean_table_name(table_name, db_name).upper()
@@ -169,8 +169,15 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
                 col_def["properties"]["aggregation"] = agg
 
             column_definitions.append(col_def)
+    column_definitions.append({
+        "name": "Calendar Date",
+        "column_id": "AUTO_CREATE_DATE_DIM::CALENDAR_DATE",
+        "properties": {
+            "column_type": "ATTRIBUTE",
+            "index_type": "DONT_INDEX"
+        } 
+    })
 
-    # Attach joins to owning tables
     join_map = collections.defaultdict(list)
     effective_joins = joins_override if joins_override else joins
     for join in effective_joins:
