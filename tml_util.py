@@ -121,15 +121,15 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
                 joins.append({
                     "name": clean_name,
                     "joins": [{
-                        "with": "DATE_DIM",
-                        "on": f"[{clean_name}::TODAY_OFFSET_KEY] = [DATE_DIM::TODAY_OFFSET_KEY]",
+                        "with": "AUTO_CREATE_DATE_DIM",
+                        "on": f"[{clean_name}::TODAY_OFFSET_KEY] = [AUTO_CREATE_DATE_DIM::TODAY_OFFSET_KEY]",
                         "type": "INNER",
                         "cardinality": "MANY_TO_ONE"
                     }]
                 })
     # Map column names to avoid collisions in display names
     column_name_map = {}
-    model_tables.append({"name": "DATE_DIM"})
+    model_tables.append({"name": "AUTO_CREATE_DATE_DIM"})
 
     for table_name, df in dataframes.items():
         df.columns = df.columns.str.upper()
