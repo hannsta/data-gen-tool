@@ -218,6 +218,7 @@ def generate_dashboard_tml(questions, model_id, demo_name, dashboard_name="Gener
         answer_token, session_id, gen_no, session = answer_question(question, model_id)
         answer_tml = export_unsaved_answer_tml(session,session_id, gen_no)
         visualizations.append(answer_tml)
+        answer_tml['answer']['name'] = spec.get("name", question)
         # visualizations.append({
         #     "id": f"Viz_{idx}",
         #     "answer": {
