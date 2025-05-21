@@ -137,7 +137,6 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
     # Map column names to avoid collisions in display names
     column_name_map = {}
     model_tables.append({"name": "AUTO_CREATE_DATE_DIM"})
-    model_tables.append()
     for table_name, df in dataframes.items():
         df.columns = df.columns.str.upper()
         clean_name = clean_table_name(table_name, db_name).upper()
