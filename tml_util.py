@@ -64,82 +64,17 @@ def normalize_column_name(name):
 def clean_table_name(table_name: str, db_name: str):
     return f"{db_name}_{table_name.replace('_df', '').upper()}"
 
-def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
+def generate_model_tml(dataframes, db_name, demo_name, joins_override=None):
     model_tables = []
     column_definitions = []
-    joins = []
+    join_map = collections.defaultdict(list)
     defined_joins = set()
 
-    # Detect all _ID columns per table
-    id_column_sources = {}
-    for table, df in dataframes.items():
-        for col in df.columns:
-            if col.upper().endswith("_ID"):
-                id_column_sources.setdefault(col.upper(), []).append(table)
-
-    print(id_column_sources)
-    # Detect joins based on ID usage volume
-    for id_col, related_tables in id_column_sources.items():
-        if len(related_tables) < 2:
-            continue  # Only consider shared IDs
-
-        # Count rows with non-null ID values per table
-        id_counts = {}
-        for table in related_tables:
-            df = dataframes[table]
-            id_counts[table] = df.shape[0]
-        if len(id_counts) < 2:
-            continue
-
-        # Sort tables by increasing count of ID usage
-        sorted_tables = sorted(id_counts.items(), key=lambda x: x[1])
-        dim_table = sorted_tables[0][0]
-        dim_clean = clean_table_name(dim_table, db_name).upper()
-
-
-
-
-        for fact_table, _ in sorted_tables[1:]:
-            fact_clean = clean_table_name(fact_table, db_name).upper()
-            join_key = (dim_clean, fact_clean, id_col)
-            if join_key in defined_joins:
-                continue
-
-            joins.append({
-                "name": dim_clean,
-                "joins": [{
-                    "with": fact_clean,
-                    "on": f"[{dim_clean}::{id_col}] = [{fact_clean}::{id_col}]",
-                    "type": "INNER",
-                    "cardinality": "ONE_TO_MANY"
-                }]
-            })
-            defined_joins.add(join_key)
-
-
-
-        for table_name, df in dataframes.items():
-            columns_upper = df.columns.str.upper()
-            if "TODAY_OFFSET_KEY" in columns_upper:
-                clean_name = clean_table_name(table_name, db_name).upper()
-                join_key = (clean_name, "AUTO_CREATE_DATE_DIM", "TODAY_OFFSET_KEY")
-                if join_key in defined_joins:
-                    continue
-
-                joins.append({
-                    "name": clean_name,
-                    "joins": [{
-                        "with": "AUTO_CREATE_DATE_DIM",
-                        "on": f"[{clean_name}::TODAY_OFFSET_KEY] = [AUTO_CREATE_DATE_DIM::TODAY_OFFSET_KEY]",
-                        "type": "INNER",
-                        "cardinality": "MANY_TO_ONE"
-                    }]
-                })
-                defined_joins.add(join_key)
-
-    # Map column names to avoid collisions in display names
-    column_name_map = {}
+    # Build DATE_DIM early
     model_tables.append({"name": "AUTO_CREATE_DATE_DIM"})
+
+    # Prepare display names and base model_tables
+    column_name_map = {}
     for table_name, df in dataframes.items():
         df.columns = df.columns.str.upper()
         clean_name = clean_table_name(table_name, db_name).upper()
@@ -171,21 +106,41 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
                 col_def["properties"]["aggregation"] = agg
 
             column_definitions.append(col_def)
+
+    # Add static column for date (always exposed)
     column_definitions.append({
         "name": "Calendar Date",
         "column_id": "AUTO_CREATE_DATE_DIM::CALENDAR_DATE",
         "properties": {
             "column_type": "ATTRIBUTE",
             "index_type": "DONT_INDEX"
-        } 
+        }
     })
 
-    join_map = collections.defaultdict(list)
+    # Use join overrides if provided
+    effective_joins = joins_override if joins_override else []
 
-    
-    effective_joins = joins
+    # Load joins into map
     for join in effective_joins:
-        join_map[join["name"]].extend(join["joins"])
+        for j in join["joins"]:
+            if j not in join_map[join["name"]]:
+                join_map[join["name"]].append(j)
+
+    # Append DATE_DIM joins based on TODAY_OFFSET_KEY
+    for table_name, df in dataframes.items():
+        columns_upper = df.columns.str.upper()
+        if "TODAY_OFFSET_KEY" in columns_upper:
+            clean_name = clean_table_name(table_name, db_name).upper()
+            date_join = {
+                "with": "AUTO_CREATE_DATE_DIM",
+                "on": f"[{clean_name}::TODAY_OFFSET_KEY] = [AUTO_CREATE_DATE_DIM::TODAY_OFFSET_KEY]",
+                "type": "INNER",
+                "cardinality": "MANY_TO_ONE"
+            }
+            if date_join not in join_map[clean_name]:
+                join_map[clean_name].append(date_join)
+
+    # Attach joins to model tables
     for table in model_tables:
         if table["name"] in join_map:
             table["joins"] = join_map[table["name"]]
@@ -207,6 +162,7 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
     }
 
     return dump(model_tml, sort_keys=False)
+
 
 
 import uuid
