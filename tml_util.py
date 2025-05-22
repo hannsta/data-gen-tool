@@ -98,23 +98,23 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
 
 
 
-        if  not joins_override:
-            for fact_table, _ in sorted_tables[1:]:
-                fact_clean = clean_table_name(fact_table, db_name).upper()
-                join_key = (dim_clean, fact_clean, id_col)
-                if join_key in defined_joins:
-                    continue
 
-                joins.append({
-                    "name": dim_clean,
-                    "joins": [{
-                        "with": fact_clean,
-                        "on": f"[{dim_clean}::{id_col}] = [{fact_clean}::{id_col}]",
-                        "type": "INNER",
-                        "cardinality": "ONE_TO_MANY"
-                    }]
-                })
-                defined_joins.add(join_key)
+        for fact_table, _ in sorted_tables[1:]:
+            fact_clean = clean_table_name(fact_table, db_name).upper()
+            join_key = (dim_clean, fact_clean, id_col)
+            if join_key in defined_joins:
+                continue
+
+            joins.append({
+                "name": dim_clean,
+                "joins": [{
+                    "with": fact_clean,
+                    "on": f"[{dim_clean}::{id_col}] = [{fact_clean}::{id_col}]",
+                    "type": "INNER",
+                    "cardinality": "ONE_TO_MANY"
+                }]
+            })
+            defined_joins.add(join_key)
 
 
 
@@ -182,10 +182,8 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
 
     join_map = collections.defaultdict(list)
 
-    effective_joins = joins.copy()
-    if joins_override:
-        effective_joins.extend(joins_override)
-
+    
+    effective_joins = joins
     for join in effective_joins:
         join_map[join["name"]].extend(join["joins"])
     for table in model_tables:
