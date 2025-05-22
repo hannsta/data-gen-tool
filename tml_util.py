@@ -69,7 +69,8 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override = None):
     column_definitions = []
     joins = []
     defined_joins = set()
-
+    print("=====JOINS=====")
+    print(joins_override)
     # Detect all _ID columns per table
     id_column_sources = {}
     for table, df in dataframes.items():
