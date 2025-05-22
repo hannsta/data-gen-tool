@@ -119,7 +119,7 @@ def generate_model_tml(dataframes, db_name, demo_name, joins_override=None):
 
     # Use join overrides if provided
     effective_joins = joins_override if joins_override else []
-
+    print(effective_joins)
     # Load joins into map
     for join in effective_joins:
         for j in join["joins"]:
